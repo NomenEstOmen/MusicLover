@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.example_item.view.*
 
 class Adapter(private val list: List<Item>) : RecyclerView.Adapter<Adapter.ViewHolder>(){
@@ -20,9 +21,8 @@ class Adapter(private val list: List<Item>) : RecyclerView.Adapter<Adapter.ViewH
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val currentItem = list[position]
 
-        holder.imageView.setImageResource(currentItem.imageResource)
+        Picasso.get().load(currentItem.imageURL).into(holder.imageView)
         holder.textView1.text = currentItem.text1
-        holder.textView2.text = currentItem.text2
 
     }
 
@@ -32,6 +32,5 @@ class Adapter(private val list: List<Item>) : RecyclerView.Adapter<Adapter.ViewH
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val imageView: ImageView = itemView.image_view      //like .findViewById(image_view)
         val textView1: TextView = itemView.text_view_1
-        val textView2: TextView = itemView.text_view_2
     }
 }

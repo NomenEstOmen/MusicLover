@@ -1,3 +1,3 @@
 package com.example.musiclover
 
-data class Item(val imageResource: Int, val text1: String, val text2: String)
+data class Item(val imageURL: String, val text1: String, val text2: String)
