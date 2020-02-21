@@ -57,10 +57,10 @@ class MainActivity : AppCompatActivity() {
         for (i in 0 until resultSize!!) {
             val thumb = searchResults?.get(i)?.thumb
             val albumName = searchResults?.get(i)?.title
-            val country = searchResults?.get(i)?.country
+            val year =  if (searchResults?.get(i)?.year != null) searchResults.get(i).year else ""
             val id = searchResults?.get(i)?.id
 
-            val item = Item(thumb!!, albumName!!, country!!, id!!)
+            val item = Item(thumb!!, albumName!!, year!!, id!!)
             list += item
         }
 
@@ -80,20 +80,8 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onResponse(call: Call<Search>, response: Response<Search>) {
                     val searchResults = response.body()?.results
-                    println(searchResults)
                     insertDataInRecyclerView(searchResults)
-
                 }})
-
-        // Query a particular release...
-        discogs.release
-        .release("123141231")
-        .enqueue(object : Callback<Release> {
-            override fun onFailure(call: Call<Release>, t: Throwable) {}
-
-            override fun onResponse(call: Call<Release>, response: Response<Release>) {
-                val release = response.body()
-            }})
     }
 
 }
