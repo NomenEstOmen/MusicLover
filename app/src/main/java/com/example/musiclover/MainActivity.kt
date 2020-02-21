@@ -40,8 +40,9 @@ class MainActivity : AppCompatActivity() {
             val thumb = searchResults?.get(i)?.thumb
             val albumName = searchResults?.get(i)?.title
             val country = searchResults?.get(i)?.country
+            val id = searchResults?.get(i)?.id
 
-            val item = Item(thumb!!, albumName!!, country!!)
+            val item = Item(thumb!!, albumName!!, country!!, id!!)
             list += item
         }
 
@@ -52,7 +53,6 @@ class MainActivity : AppCompatActivity() {
         val discogs = Discogs("MusicLover", key = "XdhiupScYeQScOxuMQVj", secret = "nTqdLXuMTQbIjchjuoAVprTkTDpigTBA")
 
         // Search the Discogs database for album / artist...
-
 
         discogs.database
             .search(hashMapOf(

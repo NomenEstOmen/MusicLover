@@ -14,7 +14,8 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_marginEnd="8dp"
-            android:src="@drawable/ic_android" />
+            android:src="@drawable/ic_android"
+            android:transitionName="transition"/>
 
         <TextView
             android:id="@+id/text_view_1"
