@@ -57,7 +57,6 @@ class AlbumDetailsActivity : AppCompatActivity() {
         client.newCall(request).enqueue(object : okhttp3.Callback {
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                 val body = response.body?.string()
-
                 val gson = GsonBuilder().create()
                 val searchResults = gson.fromJson(body, ReleaseDetails::class.java)
                 println(searchResults)
@@ -69,8 +68,6 @@ class AlbumDetailsActivity : AppCompatActivity() {
                 val countryText = searchResults.country
                 val yearText = searchResults.year
                 val trackList = searchResults.tracklist
-
-
 
                 onArtistClick(artistId, artistName)
                 runOnUiThread {

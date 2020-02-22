@@ -36,7 +36,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun fetchDiscogsJson() {
         val url =
-            "https://api.discogs.com/database/search?key=XdhiupScYeQScOxuMQVj&secret=nTqdLXuMTQbIjchjuoAVprTkTDpigTBA&genre=Jazz"
+            "https://api.discogs.com/database/search?key=XdhiupScYeQScOxuMQVj" +
+                    "&secret=nTqdLXuMTQbIjchjuoAVprTkTDpigTBA&genre=Jazz"
         val request = Request.Builder().url(url).build()
 
         val client = OkHttpClient()

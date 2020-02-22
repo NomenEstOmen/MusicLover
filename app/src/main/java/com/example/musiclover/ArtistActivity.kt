@@ -2,6 +2,13 @@ package com.example.musiclover
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.google.gson.GsonBuilder
+import com.squareup.picasso.Picasso
+import kotlinx.android.synthetic.main.activity_artist.*
+import okhttp3.Call
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.io.IOException
 
 class ArtistActivity : AppCompatActivity() {
 
@@ -10,30 +17,39 @@ class ArtistActivity : AppCompatActivity() {
         setContentView(R.layout.activity_artist)
 
         val artistId = intent.getIntExtra(AlbumDetailsActivity.ARTIST_ID_KEY, -1)
-
         val artistTitle = intent.getStringExtra(AlbumDetailsActivity.ARTIST_NAME_KEY)
         supportActionBar?.title = artistTitle
-
-        getDiscogsArtistInfo(artistId)
-
+        getDiscogsArtistInfo(artistId, artistTitle)
     }
 
-    private fun getDiscogsArtistInfo(artistId: Int) {
-/*        val discogs = Discogs(
-            "MusicLover",
-            key = "XdhiupScYeQScOxuMQVj",
-            secret = "nTqdLXuMTQbIjchjuoAVprTkTDpigTBA"
-        )
+    private fun getDiscogsArtistInfo(artistId: Int, artistTitle: String) {
+        val key = "?key=XdhiupScYeQScOxuMQVj"
+        val secret = "&secret=nTqdLXuMTQbIjchjuoAVprTkTDpigTBA"
+        val url = "https://api.discogs.com/artists/" + artistId + key + secret
+        val request = Request.Builder().url(url).build()
+        val client = OkHttpClient()
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                val body = response.body?.string()
+                val gson = GsonBuilder().create()
+                val searchResults = gson.fromJson(body, ArtistDetail::class.java)
+                println(searchResults)
 
-        // Query a particular release...
-        discogs.release
-            .release(id.toString())
-            .enqueue(object : Callback<Release> {
-                override fun onFailure(call: Call<Release>, t: Throwable) {}
-
-                override fun onResponse(call: Call<Release>, response: Response<Release>) {
-
+                val artistProfile = searchResults.profile
+                val artistImage = searchResults.images.get(0).resource_url
+                runOnUiThread {
+                    Picasso.get().load(artistImage).into(detail_image)
+                    artist_name.text = artistTitle
+                    artist_profile.text = artistProfile
                 }
-            })*/
+            }
+            override fun onFailure(call: Call, e: IOException) {
+
+            }
+        })
     }
 }
+
+class ArtistDetail(val profile: String, val images: List<Image>)
+
+
