@@ -1,24 +1,20 @@
 package com.example.musiclover
 
+import android.content.Intent
 import android.os.Bundle
 import android.transition.Fade
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
-import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.google.gson.GsonBuilder
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_detail.*
-import kotlinx.android.synthetic.main.tracklist_part.*
 import kotlinx.android.synthetic.main.tracklist_part.view.*
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import saschpe.discogs.Discogs
-import saschpe.discogs.model.release.Release
-import saschpe.discogs.model.release.Tracklist
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.io.IOException
 
 class AlbumDetailsActivity : AppCompatActivity() {
 
@@ -39,29 +35,48 @@ class AlbumDetailsActivity : AppCompatActivity() {
 
         getDiscogsRelease(id, albumTitle)
         hideActionBarFlashing()
+    }
 
-
+    private fun onArtistClick(artistId: Int?, artistName: String?) {
+        artist_info.setOnClickListener {
+            val intent = Intent(this, ArtistActivity::class.java)
+            intent.putExtra(ARTIST_ID_KEY, artistId)
+            intent.putExtra(ARTIST_NAME_KEY, artistName)
+            startActivity(intent)
+        }
     }
 
     private fun getDiscogsRelease(id: Int, albumTitle: String) {
-        val discogs = Discogs("MusicLover", key = "XdhiupScYeQScOxuMQVj", secret = "nTqdLXuMTQbIjchjuoAVprTkTDpigTBA")
+        val key = "?key=XdhiupScYeQScOxuMQVj"
+        val secret = "&secret=nTqdLXuMTQbIjchjuoAVprTkTDpigTBA"
 
-        // Query a particular release...
-        discogs.release
-            .release(id.toString())
-            .enqueue(object : Callback<Release> {
-                override fun onFailure(call: Call<Release>, t: Throwable) {}
+        val url = "https://api.discogs.com/releases/" + id + key + secret
+        val request = Request.Builder().url(url).build()
 
-                override fun onResponse(call: Call<Release>, response: Response<Release>) {
-                    val artistName = response.body()?.artists?.get(0)?.name
-                    val highResImage = response.body()?.images?.get(0)?.resourceUrl
-                    val genreText = response.body()?.genres?.joinToString()
-                    val countryText = response.body()?.country
-                    val yearText = response.body()?.year
-                    val trackList = response.body()?.tracklist
+        val client = OkHttpClient()
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                val body = response.body?.string()
+
+                val gson = GsonBuilder().create()
+                val searchResults = gson.fromJson(body, ReleaseDetails::class.java)
+                println(searchResults)
+
+                val artistName = searchResults.artists.get(0).name
+                val artistId = searchResults.artists.get(0).id
+                val highResImage = searchResults.images.get(0).resource_url
+                val genreText = searchResults.genres.joinToString()
+                val countryText = searchResults.country
+                val yearText = searchResults.year
+                val trackList = searchResults.tracklist
+
+
+
+                onArtistClick(artistId, artistName)
+                runOnUiThread {
+                    Picasso.get().load(highResImage).placeholder(detail_image.drawable)
+                        .into(detail_image)
                     getTracksAndDurations(trackList)
-
-                    Picasso.get().load(highResImage).placeholder(detail_image.drawable).into(detail_image)
                     albumtitle.text = albumTitle
                     genre.text = genreText
                     country.text = countryText
@@ -69,21 +84,28 @@ class AlbumDetailsActivity : AppCompatActivity() {
                     artist_info.visibility = View.VISIBLE
                     artist_info.text = artistName
                     tracklistDescription.visibility = View.VISIBLE
+                }
 
-                }})
+
+            }
+
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                println("failed to execute request")
+            }
+        })
     }
 
-    private fun getTracksAndDurations(trackList: List<Tracklist>?) {
+    private fun getTracksAndDurations(trackList: List<Track>?) {
         if (trackList != null) {
             tracklist.layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            for (item in trackList) {
-                addTrackAndDuration(item.title, item.duration)
+            for (track in trackList) {
+                addTrackAndDuration(track.title, track.duration)
 
-                println(item.title)
-                println(item.duration)
+                println(track.title)
+                println(track.duration)
             }
         }
     }
@@ -118,4 +140,20 @@ class AlbumDetailsActivity : AppCompatActivity() {
         window.exitTransition = fade
     }
 
+    companion object {
+        val ARTIST_ID_KEY = "ARTIST_ID"
+        val ARTIST_NAME_KEY = "ARTIST_NAME"
+    }
+
 }
+
+class ReleaseDetails(
+    val artists: List<Artist>, val images: List<Image>, val genres: List<String>,
+    val country: String, val year: Int, val tracklist: List<Track>
+)
+
+class Artist(val name: String, val id: Int)
+
+class Image(val resource_url: String)
+
+class Track(val title: String, val duration: String)

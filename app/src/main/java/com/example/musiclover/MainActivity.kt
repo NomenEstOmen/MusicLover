@@ -1,22 +1,14 @@
 package com.example.musiclover
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.android.synthetic.main.activity_main.*
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import saschpe.discogs.Discogs
-import saschpe.discogs.model.database.Result
-import saschpe.discogs.model.database.Search
-import saschpe.discogs.model.release.Release
-import saschpe.discogs.service.DatabaseService.Companion.SEARCH_GENRE
 import android.transition.Fade
-import androidx.core.app.ComponentActivity.ExtraData
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.gson.GsonBuilder
+import kotlinx.android.synthetic.main.activity_main.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.io.IOException
 
 
 class MainActivity : AppCompatActivity() {
@@ -27,8 +19,9 @@ class MainActivity : AppCompatActivity() {
 
         hideActionBarFlashing()
 
-        getDiscogs()
-
+        //getDiscogs()
+        recycler_view.layoutManager = LinearLayoutManager(this)
+        fetchDiscogsJson()
     }
 
     private fun hideActionBarFlashing() {
@@ -41,47 +34,33 @@ class MainActivity : AppCompatActivity() {
         window.exitTransition = fade
     }
 
-    private fun insertDataInRecyclerView(searchResults: List<Result>?) {
+    private fun fetchDiscogsJson() {
+        val url =
+            "https://api.discogs.com/database/search?key=XdhiupScYeQScOxuMQVj&secret=nTqdLXuMTQbIjchjuoAVprTkTDpigTBA&genre=Jazz"
+        val request = Request.Builder().url(url).build()
 
-        val resultSize = searchResults?.size
-        val list = generateList(searchResults, resultSize)
+        val client = OkHttpClient()
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                val body = response.body?.string()
 
-        recycler_view.adapter = Adapter(list)
-        recycler_view.layoutManager = LinearLayoutManager(this)
-        //recycler_view.setHasFixedSize(true) //performance optimization when size known
-    }
+                val gson = GsonBuilder().create()
+                val searchResults = gson.fromJson(body, SearchResults::class.java)
 
-    private fun generateList(searchResults: List<Result>?, resultSize: Int?): List<Item> {
-        val list = ArrayList<Item>()
+                runOnUiThread {
+                    recycler_view.adapter = Adapter(searchResults)
+                }
+            }
 
-        for (i in 0 until resultSize!!) {
-            val thumb = searchResults?.get(i)?.thumb
-            val albumName = searchResults?.get(i)?.title
-            val year =  if (searchResults?.get(i)?.year != null) searchResults.get(i).year else ""
-            val id = searchResults?.get(i)?.id
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                println("failed to execute request")
+            }
+        })
 
-            val item = Item(thumb!!, albumName!!, year!!, id!!)
-            list += item
-        }
-
-        return list
-    }
-
-    private fun getDiscogs() {
-        val discogs = Discogs("MusicLover", key = "XdhiupScYeQScOxuMQVj", secret = "nTqdLXuMTQbIjchjuoAVprTkTDpigTBA")
-
-        // Search the Discogs database for album / artist...
-
-        discogs.database
-            .search(hashMapOf(
-                SEARCH_GENRE to "Jazz"))
-            .enqueue(object : Callback<Search> {
-                override fun onFailure(call: Call<Search>, t: Throwable) {}
-
-                override fun onResponse(call: Call<Search>, response: Response<Search>) {
-                    val searchResults = response.body()?.results
-                    insertDataInRecyclerView(searchResults)
-                }})
     }
 
 }
+
+class SearchResults(val results: List<Album>)
+
+class Album(val thumb: String, val title: String, val year: String, val id: Int)
