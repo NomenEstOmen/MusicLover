@@ -2,11 +2,17 @@ package com.example.musiclover
 
 import android.os.Bundle
 import android.transition.Fade
+import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_detail.*
+import kotlinx.android.synthetic.main.tracklist_part.*
+import kotlinx.android.synthetic.main.tracklist_part.view.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -53,15 +59,13 @@ class AlbumDetailsActivity : AppCompatActivity() {
                     val countryText = response.body()?.country
                     val yearText = response.body()?.year
                     val trackList = response.body()?.tracklist
-                    val (tracks, durations) = getTitlesAndDurations(trackList)
+                    getTracksAndDurations(trackList)
 
                     Picasso.get().load(highResImage).placeholder(detail_image.drawable).into(detail_image)
                     albumtitle.text = albumTitle
                     genre.text = genreText
                     country.text = countryText
                     year.text = yearText.toString()
-                    tracklist.text = tracks
-                    trackDurationList.text = durations
                     artist_info.visibility = View.VISIBLE
                     artist_info.text = artistName
                     tracklistDescription.visibility = View.VISIBLE
@@ -69,19 +73,28 @@ class AlbumDetailsActivity : AppCompatActivity() {
                 }})
     }
 
-    private fun getTitlesAndDurations(trackList: List<Tracklist>?): Pair<String,String> {
+    private fun getTracksAndDurations(trackList: List<Tracklist>?) {
         if (trackList != null) {
-            var multiLineTracks = ""
-            var multiLineDurations = ""
+            tracklist.layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
             for (item in trackList) {
-                multiLineTracks = multiLineTracks + item.title + "\n";
-                multiLineDurations = multiLineDurations + item.duration + "\n";
+                addTrackAndDuration(item.title, item.duration)
+
                 println(item.title)
                 println(item.duration)
             }
-            return Pair(multiLineTracks,multiLineDurations)
         }
-        return Pair("No trackList available","")
+    }
+
+    private fun addTrackAndDuration(trackName: String?, duration: String?) {
+        val inflater = LayoutInflater.from(this)
+        val layout =
+            inflater.inflate(R.layout.tracklist_part, tracklist, false) as LinearLayout
+        layout.tracklistName.text = trackName
+        layout.tracklistDuration.text = duration
+        tracklist.addView(layout)
     }
 
     //FIX: toolbar back button does not use transition animation
