@@ -25,7 +25,9 @@ class AlbumDetailsActivity : AppCompatActivity() {
 
         //image is low resolution maybe load it again through get discogs.release..
         val itemImage = intent.getStringExtra(Adapter.ViewHolder.ALBUM_IMAGE_URL_KEY)
-        Picasso.get().load(itemImage).into(detail_image)
+        if (itemImage.isNotEmpty()) {
+            Picasso.get().load(itemImage).into(detail_image)
+        }
 
         val albumTitle = intent.getStringExtra(Adapter.ViewHolder.ALBUM_TITLE_KEY)
         supportActionBar?.title = albumTitle
@@ -47,10 +49,10 @@ class AlbumDetailsActivity : AppCompatActivity() {
     }
 
     private fun getDiscogsRelease(id: Int, albumTitle: String) {
-        val key = "?key=XdhiupScYeQScOxuMQVj"
-        val secret = "&secret=nTqdLXuMTQbIjchjuoAVprTkTDpigTBA"
+        val key = "XdhiupScYeQScOxuMQVj"
+        val secret = "nTqdLXuMTQbIjchjuoAVprTkTDpigTBA"
 
-        val url = "https://api.discogs.com/releases/" + id + key + secret
+        val url = "https://api.discogs.com/releases/$id?key=$key&secret=$secret"
         val request = Request.Builder().url(url).build()
 
         val client = OkHttpClient()
@@ -61,10 +63,10 @@ class AlbumDetailsActivity : AppCompatActivity() {
                 val searchResults = gson.fromJson(body, ReleaseDetails::class.java)
                 println(searchResults)
 
-                val artistName = searchResults.artists.get(0).name
-                val artistId = searchResults.artists.get(0).id
-                val highResImage = searchResults.images.get(0).resource_url
-                val genreText = searchResults.genres.joinToString()
+                val artistName = searchResults.artists?.get(0)?.name
+                val artistId = searchResults.artists?.get(0)?.id
+                val highResImage = searchResults.images?.get(0)?.resource_url
+                val genreText = searchResults.genres?.joinToString()
                 val countryText = searchResults.country
                 val yearText = searchResults.year
                 val trackList = searchResults.tracklist
@@ -120,7 +122,7 @@ class AlbumDetailsActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             android.R.id.home -> {
-                finishAfterTransition();
+                finishAfterTransition()
                 return true
             }
         }
@@ -145,12 +147,12 @@ class AlbumDetailsActivity : AppCompatActivity() {
 }
 
 class ReleaseDetails(
-    val artists: List<Artist>, val images: List<Image>, val genres: List<String>,
-    val country: String, val year: Int, val tracklist: List<Track>
+    val artists: List<Artist>?, val images: List<Image>?, val genres: List<String>?,
+    val country: String?, val year: Int?, val tracklist: List<Track>?
 )
 
-class Artist(val name: String, val id: Int)
+class Artist(val name: String?, val id: Int?)
 
-class Image(val resource_url: String)
+class Image(val resource_url: String?)
 
-class Track(val title: String, val duration: String)
+class Track(val title: String?, val duration: String?)

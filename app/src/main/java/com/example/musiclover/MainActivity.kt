@@ -2,14 +2,16 @@ package com.example.musiclover
 
 import android.os.Bundle
 import android.transition.Fade
+import android.view.Menu
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.gson.GsonBuilder
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,9 +21,8 @@ class MainActivity : AppCompatActivity() {
 
         hideActionBarFlashing()
 
-        //getDiscogs()
         recycler_view.layoutManager = LinearLayoutManager(this)
-        fetchDiscogsJson()
+        searchDiscogs("genre=Jazz")
     }
 
     private fun hideActionBarFlashing() {
@@ -34,10 +35,11 @@ class MainActivity : AppCompatActivity() {
         window.exitTransition = fade
     }
 
-    private fun fetchDiscogsJson() {
+    private fun searchDiscogs(s: String) {
+        val key = "XdhiupScYeQScOxuMQVj"
+        val secret = "nTqdLXuMTQbIjchjuoAVprTkTDpigTBA"
         val url =
-            "https://api.discogs.com/database/search?key=XdhiupScYeQScOxuMQVj" +
-                    "&secret=nTqdLXuMTQbIjchjuoAVprTkTDpigTBA&genre=Jazz"
+            "https://api.discogs.com/database/search?key=$key&secret=$secret&$s"
         val request = Request.Builder().url(url).build()
 
         val client = OkHttpClient()
@@ -47,9 +49,11 @@ class MainActivity : AppCompatActivity() {
 
                 val gson = GsonBuilder().create()
                 val searchResults = gson.fromJson(body, SearchResults::class.java)
+                println(body)
 
                 runOnUiThread {
                     recycler_view.adapter = Adapter(searchResults)
+                    //Adapter(searchResults).notifyDataSetChanged()
                 }
             }
 
@@ -57,11 +61,30 @@ class MainActivity : AppCompatActivity() {
                 println("failed to execute request")
             }
         })
-
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.menu, menu)
+
+        val searchItem: MenuItem = menu!!.findItem(R.id.action_search)
+        val searchView: SearchView = searchItem.actionView as SearchView
+        searchView.queryHint = "Search for an Album..."
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                searchDiscogs("release_title=$query&type=release")
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                return false
+            }
+        })
+        return true
+    }
 }
 
 class SearchResults(val results: List<Album>)
 
-class Album(val thumb: String, val title: String, val year: String, val id: Int)
+class Album(val thumb: String, val title: String?, val year: String?, val id: Int?)

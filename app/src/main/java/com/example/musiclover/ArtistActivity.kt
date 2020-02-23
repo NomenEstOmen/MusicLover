@@ -23,21 +23,21 @@ class ArtistActivity : AppCompatActivity() {
     }
 
     private fun getDiscogsArtistInfo(artistId: Int, artistTitle: String) {
-        val key = "?key=XdhiupScYeQScOxuMQVj"
-        val secret = "&secret=nTqdLXuMTQbIjchjuoAVprTkTDpigTBA"
-        val url = "https://api.discogs.com/artists/" + artistId + key + secret
+        val key = "XdhiupScYeQScOxuMQVj"
+        val secret = "nTqdLXuMTQbIjchjuoAVprTkTDpigTBA"
+        val url = "https://api.discogs.com/artists/$artistId?key=$key&secret=$secret"
         val request = Request.Builder().url(url).build()
         val client = OkHttpClient()
         client.newCall(request).enqueue(object : okhttp3.Callback {
-            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+            override fun onResponse(call: Call, response: okhttp3.Response) {
                 val body = response.body?.string()
                 val gson = GsonBuilder().create()
                 val searchResults = gson.fromJson(body, ArtistDetail::class.java)
                 println(searchResults)
 
                 val artistProfile = searchResults.profile
-                val artistImage = searchResults.images.get(0).resource_url
                 runOnUiThread {
+                    val artistImage = searchResults.images?.get(0)?.resource_url
                     Picasso.get().load(artistImage).into(detail_image)
                     artist_name.text = artistTitle
                     artist_profile.text = artistProfile
@@ -50,6 +50,6 @@ class ArtistActivity : AppCompatActivity() {
     }
 }
 
-class ArtistDetail(val profile: String, val images: List<Image>)
+class ArtistDetail(val profile: String?, val images: List<Image>?)
 
 

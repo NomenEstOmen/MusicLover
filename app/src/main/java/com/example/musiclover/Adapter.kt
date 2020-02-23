@@ -27,7 +27,9 @@ class Adapter(val searchResults: SearchResults) : RecyclerView.Adapter<Adapter.V
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val currentAlbum = searchResults.results.get(position)
 
-        Picasso.get().load(currentAlbum.thumb).into(holder.imageView)
+        if (currentAlbum.thumb.isNotEmpty()) {
+            Picasso.get().load(currentAlbum.thumb).into(holder.imageView)
+        }
         holder.textView1.text = currentAlbum.title
         holder.textView2.text = currentAlbum.year
         holder.album = currentAlbum
